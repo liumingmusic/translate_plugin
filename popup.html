@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <span class="logo">译</span>
+    <h1>逸译</h1>
+    <a href="#" id="historyLink" title="翻译历史">🕘</a>
+    <a href="#" id="vocabLink" title="生词本">📚</a>
+    <a href="#" id="optionsLink" title="设置">⚙</a>
+  </header>
+  <main id="mainView">
+    <div class="review" id="reviewBox">
+      <div class="review-info">今日待复习 <b id="dueCount">0</b> 词</div>
+      <div class="review-btns">
+        <button id="reviewBtn" class="sm rv-start">复习</button>
+        <button id="spellBtn" class="sm rv-start">听写</button>
+      </div>
+    </div>
+    <label class="field">
+      <span>翻译引擎</span>
+      <select id="engine"></select>
+    </label>
+    <div class="langs">
+      <select id="from" title="源语言"></select>
+      <button id="swap" title="交换语言">⇄</button>
+      <select id="to" title="目标语言"></select>
+    </div>
+    <div class="dmode">
+      <span>全文显示</span>
+      <div class="seg">
+        <button data-v="bilingual">对照</button>
+        <button data-v="immersive">沉浸</button>
+        <button data-v="trans">仅译文</button>
+      </div>
+    </div>
+    <div class="toggles">
+      <label class="tgl"><input type="checkbox" id="dictToggle"><span>单词词典</span></label>
+      <label class="tgl"><input type="checkbox" id="vocabAuto"><span>自动收藏查词</span></label>
+      <label class="tgl"><input type="checkbox" id="autoTranslate"><span>自动翻译外语页</span></label>
+      <label class="tgl"><input type="checkbox" id="instantToggle"><span>选中即译</span></label>
+    </div>
+    <button id="translateBtn" class="primary">翻译此页</button>
+    <button id="restoreBtn" class="ghost">还原网页</button>
+    <button id="historyBtn" class="ghost">翻译历史</button>
+    <p class="tip">划词后自动翻译，或用右键菜单翻译选中文字；快捷键 Alt+Shift+T 翻译整页、Alt+Shift+S 翻译选中</p>
+  </main>
+  <section id="reviewView" hidden>
+    <div class="rv-head">
+      <span id="rvProgress">复习中</span>
+      <button id="rvExit" class="ghost sm" title="退出">✕</button>
+    </div>
+    <div class="rv-card" id="rvCard">
+      <div class="rv-word" id="rvWord"></div>
+      <div class="rv-phon" id="rvPhon"></div>
+      <button id="rvReveal" class="ghost sm">显示释义</button>
+      <div class="rv-defs" id="rvDefs" hidden></div>
+      <div class="rv-actions" id="rvActions" hidden>
+        <button data-grade="0" class="rv-g rd">忘记</button>
+        <button data-grade="1" class="rv-g ra">模糊</button>
+        <button data-grade="2" class="rv-g rk">认识</button>
+      </div>
+    </div>
+    <div class="rv-card" id="rvSpell" hidden>
+      <div class="rv-phon" id="spPhon"></div>
+      <button id="spPlay" class="ghost sm">🔊 朗读单词</button>
+      <input id="spInput" class="sp-input" placeholder="输入你听到的拼写" autocomplete="off" spellcheck="false">
+      <button id="spSubmit" class="primary sm">提交</button>
+      <div class="rv-defs" id="spDefs" hidden></div>
+      <div class="rv-actions" id="spActions" hidden>
+        <button data-grade="0" class="rv-g rd">忘了</button>
+        <button data-grade="2" class="rv-g rk">拼对</button>
+      </div>
+    </div>
+    <div class="rv-done" id="rvDone" hidden>
+      <div class="rv-done-emoji">✓</div>
+      <p id="rvDoneText"></p>
+      <button id="rvDoneClose" class="primary sm">完成</button>
+    </div>
+  </section>
+  <section id="historyView" hidden>
+    <div class="rv-head">
+      <span>最近翻译</span>
+      <button id="histBack" class="ghost sm">返回</button>
+      <button id="histClear" class="ghost sm">清空</button>
+    </div>
+    <div class="hist-list" id="histList"></div>
+  </section>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

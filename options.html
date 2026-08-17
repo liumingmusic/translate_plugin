@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>逸译 · 设置</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span class="logo">译</span>
+      <h1>逸译 · 设置</h1>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab on" data-tab="engine">翻译引擎</button>
+      <button class="tab" data-tab="enhance">划词与显示</button>
+      <button class="tab" data-tab="learn">生词本</button>
+      <button class="tab" data-tab="glossary">术语库</button>
+      <button class="tab" data-tab="smart">智能翻译</button>
+      <button class="tab" data-tab="privacy">隐私</button>
+    </nav>
+
+    <!-- 翻译引擎 -->
+    <section class="card panel" data-panel="engine">
+      <h2>翻译器（可多选）</h2>
+      <p class="hint">勾选一个或多个翻译器；选中 ≥2 个时，划词浮窗会出现「⇄ 对比」按钮同框比较。全文翻译始终只用下方“全文翻译使用”指定的那一个。</p>
+      <div class="engines" id="engineList">
+        <label class="engine"><input type="checkbox" class="eng-cb" value="google"><div><b>Google 翻译</b><span>免费 · 无需配置 · 质量佳</span></div></label>
+        <label class="engine"><input type="checkbox" class="eng-cb" value="lingva"><div><b>Lingva</b><span>免费 · Google 镜像 · 国内可直连</span></div></label>
+        <label class="engine"><input type="checkbox" class="eng-cb" value="simplytranslate"><div><b>SimplyTranslate</b><span>免费 · Google 镜像 · 备选</span></div></label>
+        <label class="engine"><input type="checkbox" class="eng-cb" value="mymemory"><div><b>MyMemory</b><span>免费 · 无需配置 · 质量一般</span></div></label>
+        <label class="engine"><input type="checkbox" class="eng-cb" value="baidu"><div><b>百度翻译</b><span>需 AppID + 密钥</span></div></label>
+        <!-- 大模型配置项由 JS 注入到此处之后 -->
+      </div>
+
+      <div class="row2">
+        <div class="field"><label>主翻译器（划词/选中默认用）</label><select id="primaryEngine"></select></div>
+        <div class="field"><label>全文翻译使用（整页只用这一个）</label><select id="fullPageEngine"></select></div>
+      </div>
+
+      <div class="panel-in" id="panel-baidu">
+        <div class="field"><label>AppID</label><input id="baiduAppid" placeholder="在 fanyi-api.baidu.com 注册获取" autocomplete="off"></div>
+        <div class="field"><label>密钥</label><input id="baiduSecret" type="password" placeholder="个人中心 → 安全管理处查看" autocomplete="off"></div>
+        <div class="row"><button class="test" data-engine="baidu">测试百度翻译</button><span class="hint">免费标准版每月 5 万字，QPS 限制为 1</span></div>
+      </div>
+
+      <h2>AI 大模型配置</h2>
+      <p class="hint">可添加多个大模型（如 DeepSeek、OpenAI、智谱等），每个作为独立翻译器参与上面的多选对比。</p>
+      <div class="row">
+        <div class="field" style="flex:1"><label>选择要编辑的大模型</label><select id="llmProfileSel"></select></div>
+        <button id="llmAdd" class="test">+ 添加大模型</button>
+        <button id="llmDel" class="test">删除</button>
+      </div>
+      <div class="panel-in" id="panel-llm">
+        <div class="field">
+          <label>名称（显示用，如 DeepSeek / OpenAI）</label>
+          <input id="llmName" placeholder="DeepSeek" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>服务商（选一个，自动填好地址和模型）</label>
+          <div class="prov-seg" id="llmProviders"></div>
+        </div>
+        <div class="field"><label>API 地址（Base URL）</label><input id="llmBaseUrl" placeholder="https://api.deepseek.com/v1" autocomplete="off"></div>
+        <div class="field"><label>API Key</label><input id="llmApiKey" type="password" placeholder="sk-..." autocomplete="off"></div>
+        <div class="field"><label>模型</label><input id="llmModel" placeholder="deepseek-chat / gpt-4o-mini / glm-4-flash ..." autocomplete="off"></div>
+        <div class="field"><label>自定义翻译指令（可选）</label><textarea id="llmPrompt" rows="3" placeholder="留空使用内置专业翻译指令"></textarea></div>
+        <div class="llm-keyhint" id="llmKeyHint"></div>
+        <div class="row"><button class="test" id="llmTest">测试大模型</button><span class="hint">兼容 OpenAI Chat Completions 协议</span></div>
+      </div>
+
+      <div class="row">
+        <button class="test" data-engine="lingva">测试 Lingva</button>
+        <button class="test" data-engine="simplytranslate">测试 SimplyTranslate</button>
+        <button class="test" data-engine="google">测试 Google（含降级链）</button>
+        <span class="hint">免费引擎自动互备：Google → Lingva → SimplyTranslate → MyMemory</span>
+      </div>
+    </section>
+
+    <!-- 划词与显示 -->
+    <section class="card panel" data-panel="enhance" hidden>
+      <h2>默认语言</h2>
+      <div class="langs">
+        <div class="field"><label>源语言</label><select id="from"></select></div>
+        <div class="field"><label>目标语言</label><select id="to"></select></div>
+      </div>
+
+      <h2>划词增强</h2>
+      <p class="hint">在「翻译引擎」页勾选 ≥2 个翻译器后，划词浮窗会出现「⇄ 对比」按钮，同框比较各平台译文。</p>
+      <div class="field checkbox"><input type="checkbox" id="dictEnabled"><label for="dictEnabled">单词词典详情（音标、释义、词形、词组、近义词、双语例句与真人发音）</label></div>
+
+      <h2>翻译与显示</h2>
+      <div class="field">
+        <label>全文翻译显示方式</label>
+        <div class="seg">
+          <button data-v="bilingual">原文 / 译文对照</button>
+          <button data-v="trans">仅显示译文</button>
+        </div>
+      </div>
+      <div class="field checkbox"><input type="checkbox" id="selectionBubble"><label for="selectionBubble">选中文本后显示“译”气泡按钮</label></div>
+      <div class="field checkbox"><input type="checkbox" id="instantTranslate"><label for="instantTranslate">选中即自动翻译（关掉则只显示气泡，点一下再翻译）</label></div>
+      <div class="field"><label>译文颜色</label><input type="color" id="transColor"></div>
+      <h2>发音</h2>
+      <div class="field">
+        <label>默认口音</label>
+        <div class="seg" id="accentSeg">
+          <button data-v="us" class="on">美音</button>
+          <button data-v="uk">英音</button>
+        </div>
+      </div>
+      <div class="field checkbox"><input type="checkbox" id="slowSpeech"><label for="slowSpeech">慢速朗读（例句/发音更清晰）</label></div>
+    </section>
+
+    <!-- 生词本 -->
+    <section class="card panel" data-panel="learn" hidden>
+      <h2>生词本</h2>
+      <p class="desc">查词时收藏的单词会记录在这里，可复习、可导出到 Anki / CSV。<span id="vocabCount" class="count">0 个</span></p>
+      <div class="field checkbox"><input type="checkbox" id="vocabAuto"><label for="vocabAuto">自动收藏：开启后每次查词自动加入生词本（不重复）</label></div>
+      <div class="field checkbox"><input type="checkbox" id="notifyOnDue"><label for="notifyOnDue">到期复习桌面提醒（每日检查待复习词）</label></div>
+      <div class="row">
+        <button id="exportCsv" class="ghost">导出 CSV</button>
+        <button id="exportJson" class="ghost">导出 JSON</button>
+        <button id="importJson" class="ghost">导入 JSON</button>
+        <button id="exportAnki" class="ghost">导出 Anki</button>
+        <button id="clearVocab" class="ghost danger">清空生词本</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+      <div id="vocabList" class="vocab-list"></div>
+    </section>
+
+    <!-- 术语库 -->
+    <section class="card panel" data-panel="glossary" hidden>
+      <h2>术语库（自定义译法）</h2>
+      <p class="desc">为特定词汇指定固定译法，翻译时优先采用，避免引擎误译专有名词。</p>
+      <div class="field checkbox"><input type="checkbox" id="glossaryEnabled"><label for="glossaryEnabled">启用术语库（翻译时替换指定译法）</label></div>
+      <div class="gloss-add">
+        <input id="glSrc" placeholder="原文（如 React）">
+        <input id="glDst" placeholder="固定译法（如 React）">
+        <button id="glAdd" class="primary sm">添加</button>
+      </div>
+      <div id="glossaryList" class="gloss-list"></div>
+    </section>
+
+    <!-- 智能翻译 -->
+    <section class="card panel" data-panel="smart" hidden>
+      <h2>自动翻译外语页面</h2>
+      <div class="field checkbox"><input type="checkbox" id="autoTranslate"><label for="autoTranslate">打开非中文网页时自动逐段翻译（基于页面 lang 属性判断）</label></div>
+      <div class="field">
+        <label>不翻译的站点（每行一个域名，如 github.com）</label>
+        <textarea id="siteBlock" rows="3" placeholder="github.com&#10;twitter.com"></textarea>
+      </div>
+    </section>
+
+    <!-- 隐私 -->
+    <section class="card panel" data-panel="privacy" hidden>
+      <h2>隐私与权限说明</h2>
+      <ul class="privacy">
+        <li><b>数据流向</b>：选中 / 待翻译的文本只发送给<b>你所选的翻译引擎</b>（Google / Lingva / SimplyTranslate / MyMemory / 百度 / 你自配的大模型）。插件没有自有服务器，不会存储、上传你的翻译文本。</li>
+        <li><b>本机保存的数据</b>（均通过 chrome.storage 保存在浏览器本地，不上传）：
+          <ul class="privacy-sub">
+            <li><code>ety_vocab</code>：生词本（单词、音标、释义、查词时的页面语境、来源网址）</li>
+            <li><code>ety_glossary</code>：你自定义的术语 / 固定译法</li>
+            <li><code>ety_cache</code>：翻译结果本地缓存（二次访问秒出，不含任何账号信息）</li>
+            <li>chrome.storage.sync：你的各项设置（引擎、语种、开关等），可随账号在多端同步</li>
+          </ul>
+        </li>
+        <li>单词词典数据来自有道词典公开接口与 Wiktionary 公开接口，仅用于查词展示。</li>
+        <li>如配置自有大模型，API Key 仅保存在本机；仅在你发起翻译时发送给对应的模型服务方，不会转交其他第三方。</li>
+        <li>本扩展不收集个人身份信息，无后台追踪、无遥测。</li>
+      </ul>
+      <p class="desc">权限用途：<code>storage</code> 保存设置与本机数据；<code>contextMenus</code> 提供右键「翻译」菜单；<code>activeTab</code> / <code>scripting</code> 在你主动触发翻译时向当前页面注入脚本。主机权限仅声明向下列已知接口发起请求；若你的大模型使用自定义地址，由后台在你授权后直连，不在此清单内：<br>
+        <code>translate.googleapis.com</code> · <code>clients5.google.com</code> · <code>lingva.ml</code> · <code>simplytranslate.org</code> · <code>api.mymemory.translated.net</code> · <code>fanyi-api.baidu.com</code> · <code>dict.youdao.com</code> · <code>en.wiktionary.org</code>
+      </p>
+    </section>
+
+    <footer>
+      <button id="saveBtn" class="primary">保存设置</button>
+      <span id="saveStatus"></span>
+    </footer>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

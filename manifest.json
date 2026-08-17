@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "逸译 · 网页翻译",
+  "version": "1.5.3",
+  "description": "优雅的网页翻译助手：全文双语/沉浸式对照 + 划词即时翻译 + 生词本复习（含听写测试）+ 选中即译。内置免费引擎自动互备，支持多引擎对比、单词词典（音标/例句/联动查词）、术语库（智能匹配）、文档级上下文、翻译缓存、失败段重试与复习到期提醒。",
+  "minimum_chrome_version": "102",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "逸译 · 网页翻译",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "options.html",
+  "permissions": ["storage", "contextMenus", "activeTab", "scripting", "alarms", "notifications"],
+  "host_permissions": [
+    "https://translate.googleapis.com/",
+    "https://clients5.google.com/",
+    "https://lingva.ml/",
+    "https://simplytranslate.org/",
+    "https://api.mymemory.translated.net/",
+    "https://fanyi-api.baidu.com/",
+    "https://dict.youdao.com/",
+    "https://en.wiktionary.org/"
+  ],
+  "commands": {
+    "ets-translate-page": {
+      "suggested_key": { "default": "Alt+Shift+T" },
+      "description": "翻译整个页面"
+    },
+    "ets-translate-selection": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "翻译选中的文字"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}

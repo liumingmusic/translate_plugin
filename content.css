@@ -1,0 +1,461 @@
+/* 逸译 · 页面注入样式（全部以 .ety- 前缀，避免污染原页面）
+   主题：靛蓝 #3b5bdb · 雾灰 #f4f6fa · 石板字，深色模式跟随系统 */
+
+:root {
+  --ety-color: #3b5bdb;        /* 主色：靛蓝 */
+  --ety-color-rgb: 59, 91, 219; /* 主色 RGB 分量，供 rgba() 高亮使用（不依赖 color-mix） */
+  --ety-color-d: #2f4ac0;      /* 主色按下 */
+  --ety-bg: #f4f6fa;           /* 雾灰底 */
+  --ety-surface: #ffffff;      /* 卡片表面 */
+  --ety-surface-2: #f6f8fc;    /* 分组块头 */
+  --ety-text: #1f2430;         /* 石板字 */
+  --ety-text-2: #5b6472;
+  --ety-muted: #8a93a3;
+  --ety-border: #e6eaf1;
+  --ety-border-2: #eef2f7;
+  --ety-danger: #e03131;
+  --ety-danger-bg: #fff5f5;
+  --ety-danger-bd: #ffc9c9;
+  --ety-warn-bg: #fff4e6;
+  --ety-warn-text: #b45309;
+  --ety-radius: 14px;
+  --ety-radius-sm: 10px;
+  --ety-shadow: 0 14px 44px rgba(28, 38, 80, 0.18);
+  --ety-font: 14px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ety-color: #748ffc;
+    --ety-color-rgb: 116, 143, 252;
+    --ety-color-d: #5c7cfa;
+    --ety-bg: #14181f;
+    --ety-surface: #1c2129;
+    --ety-surface-2: #232a34;
+    --ety-text: #e7ebf0;
+    --ety-text-2: #aab2c0;
+    --ety-muted: #76808f;
+    --ety-border: #2b333f;
+    --ety-border-2: #232a34;
+    --ety-danger: #ff8787;
+    --ety-danger-bg: #2a1b1b;
+    --ety-danger-bd: #5c2b2b;
+    --ety-warn-bg: #2a2317;
+    --ety-warn-text: #ffd8a8;
+    --ety-shadow: 0 14px 44px rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* ---- 划词气泡 ---- */
+.ety-bubble {
+  position: fixed;
+  z-index: 2147483646;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ety-surface);
+  border: 1px solid var(--ety-border);
+  box-shadow: 0 4px 14px rgba(28, 38, 80, 0.18);
+  color: var(--ety-color);
+  font: 700 13px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+.ety-bubble:hover {
+  background: var(--ety-color);
+  color: #fff;
+  border-color: var(--ety-color);
+  transform: scale(1.08);
+}
+
+/* ---- 结果卡片 ---- */
+.ety-card {
+  position: fixed;
+  z-index: 2147483647;
+  display: none;
+  width: min(380px, calc(100vw - 24px));
+  background: var(--ety-surface);
+  border: 1px solid var(--ety-border);
+  border-radius: var(--ety-radius);
+  box-shadow: var(--ety-shadow);
+  color: var(--ety-text);
+  font: var(--ety-font);
+  overflow: hidden;
+}
+.ety-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ety-border-2);
+  font-size: 12px;
+  color: var(--ety-text-2);
+}
+.ety-card-eng { font-weight: 700; color: var(--ety-text); }
+.ety-card-lang { flex: 1; }
+.ety-card-close {
+  border: none;
+  background: none;
+  color: var(--ety-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 8px;
+  transition: background 0.12s, color 0.12s;
+}
+.ety-card-close:hover { background: var(--ety-surface-2); color: var(--ety-text); }
+.ety-card-cmp, .ety-card-set {
+  border: none;
+  background: none;
+  color: var(--ety-muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 8px;
+  transition: background 0.12s, color 0.12s;
+}
+.ety-card-cmp:hover, .ety-card-set:hover { background: var(--ety-surface-2); color: var(--ety-color); }
+.ety-card-src {
+  display: none;
+  padding: 9px 14px 0;
+  color: var(--ety-muted);
+  font-size: 12px;
+  max-height: 96px;
+  overflow: auto;
+  white-space: pre-wrap;
+  align-items: baseline;
+  gap: 6px;
+}
+.ety-card-src span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ety-card-body {
+  padding: 12px 14px;
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ety-card.ety-rich .ety-card-body { max-height: 200px; }
+.ety-card.ety-rich { width: min(420px, calc(100vw - 24px)); }
+
+/* ---- 发音按钮 ---- */
+.ety-spk {
+  flex: none;
+  border: 1px solid var(--ety-border);
+  background: var(--ety-surface);
+  color: var(--ety-color);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font: 700 10px/1 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  vertical-align: middle;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.ety-spk:hover { background: var(--ety-color); border-color: var(--ety-color); color: #fff; }
+.ety-spk.ety-spk-on {
+  background: var(--ety-color);
+  border-color: var(--ety-color);
+  color: #fff;
+  animation: ety-spk-pulse 0.9s ease-in-out infinite;
+}
+@keyframes ety-spk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ---- 多引擎对比：每引擎一个分组块 ---- */
+.ety-mblock {
+  border: 1px solid var(--ety-border);
+  border-radius: var(--ety-radius-sm);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.ety-mblock:last-child { margin-bottom: 0; }
+.ety-mhead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--ety-surface-2);
+  border-bottom: 1px solid var(--ety-border-2);
+}
+.ety-mhead .ety-mname {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ety-color);
+  letter-spacing: 0.02em;
+}
+.ety-mhead .ety-mfb { font-size: 10px; color: var(--ety-muted); }
+.ety-mhead .ety-spk { margin-left: auto; }
+.ety-mbody { padding: 8px 12px; }
+.ety-mfail { border-color: var(--ety-danger-bd); }
+.ety-mfail .ety-mhead { background: var(--ety-danger-bg); border-bottom-color: var(--ety-danger-bd); }
+.ety-mfail .ety-mhead .ety-mname { color: var(--ety-danger); }
+.ety-mfail .ety-mbody { color: var(--ety-danger); font-size: 12px; }
+
+/* ---- 词典详情面板 ---- */
+.ety-dict {
+  border-top: 1px solid var(--ety-border-2);
+  max-height: 320px;
+  overflow: auto;
+  padding: 10px 14px 12px;
+  font: 13px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.ety-dhead {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+.ety-dword { font-size: 18px; font-weight: 700; color: var(--ety-text); }
+.ety-dphon { color: var(--ety-text-2); font-size: 12px; }
+.ety-dtags { display: flex; gap: 4px; flex-wrap: wrap; padding-bottom: 4px; }
+.ety-dtag {
+  font-size: 10px;
+  color: var(--ety-warn-text);
+  background: var(--ety-warn-bg);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+.ety-dsec h4 {
+  margin: 10px 0 3px;
+  font-size: 11px;
+  color: var(--ety-muted);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ety-ddef { color: var(--ety-text); }
+.ety-dline { color: var(--ety-text-2); font-size: 12.5px; }
+.ety-dline b { color: var(--ety-text); font-weight: 600; }
+.ety-dsent { padding: 6px 0; }
+.ety-dsent-en {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--ety-text);
+}
+.ety-dsent-en b { flex: 1; min-width: 0; font-weight: 500; word-break: normal; overflow-wrap: break-word; }
+.ety-dsent-cn {
+  color: var(--ety-muted);
+  font-size: 12px;
+  margin-top: 3px;
+  padding-left: 2px;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.ety-dsent-cn-empty { font-style: italic; opacity: 0.55; }
+/* 例句点击发音的小喇叭 */
+.ety-dsent .ety-spk { margin-top: 1px; }
+
+/* 词典底部操作条：收藏到生词本 */
+.ety-dfoot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--ety-border);
+}
+.ety-save {
+  border: 1px solid var(--ety-border);
+  background: var(--ety-surface);
+  color: var(--ety-text-2);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.12s;
+}
+.ety-save:hover { border-color: var(--ety-color); color: var(--ety-color); }
+.ety-save.ety-saved { background: var(--ety-color); border-color: var(--ety-color); color: #fff; }
+
+.ety-card-foot { display: none; gap: 8px; padding: 0 14px 12px; }
+.ety-btn {
+  border: 1px solid var(--ety-border);
+  background: var(--ety-surface);
+  color: var(--ety-text-2);
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.ety-btn:hover { border-color: var(--ety-color); color: var(--ety-color); }
+.ety-error { color: var(--ety-danger); font-size: 13px; }
+/* ---- 失败段内联重试按钮（兜底降级链再试一次） ---- */
+.ety-t .ety-retry, .ety-t-block .ety-retry {
+  display: inline-block;
+  margin-left: 6px;
+  border: 1px solid var(--ety-border);
+  background: var(--ety-surface);
+  color: var(--ety-color);
+  border-radius: 6px;
+  padding: 0 8px;
+  font: 12px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  cursor: pointer;
+  vertical-align: baseline;
+  transition: all 0.12s;
+}
+.ety-t .ety-retry:hover, .ety-t-block .ety-retry:hover { border-color: var(--ety-color); background: var(--ety-color); color: #fff; }
+.ety-loading { display: inline-flex; gap: 5px; padding: 6px 0; }
+.ety-loading i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ety-color);
+  animation: ety-b 1s infinite ease-in-out;
+}
+.ety-loading i:nth-child(2) { animation-delay: 0.15s; }
+.ety-loading i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ety-b {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* ---- 全文翻译：原文/译文（段落级对照） ---- */
+/* 原文保持页面原样；译文作为独立块紧跟其后，左色条 + 浅底，一眼对应 */
+.ety-t-block {
+  display: block;
+  margin: 6px 0 10px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--ety-color);
+  background: color-mix(in srgb, var(--ety-color) 7%, var(--ety-surface, #fff));
+  color: var(--ety-color);
+  border-radius: 0 6px 6px 0;
+  line-height: 1.75;
+  cursor: help;
+  font-size: 0.98em;
+}
+.ety-t-block.ety-fail { color: var(--ety-muted); font-style: italic; background: transparent; border-left-color: var(--ety-border); }
+/* 段落译文加载中：跳动三点 */
+.ety-t.ety-loading-t, .ety-t-block.ety-loading-t {
+  display: inline-flex; gap: 5px; vertical-align: middle; padding: 6px 10px;
+  background: transparent; border-left-color: var(--ety-border);
+}
+.ety-t.ety-loading-t i, .ety-t-block.ety-loading-t i {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--ety-color);
+  animation: ety-b 1s infinite ease-in-out;
+}
+.ety-t.ety-loading-t i:nth-child(2), .ety-t-block.ety-loading-t i:nth-child(2) { animation-delay: 0.15s; }
+.ety-t.ety-loading-t i:nth-child(3), .ety-t-block.ety-loading-t i:nth-child(3) { animation-delay: 0.3s; }
+
+/* 显示模式切换（对照 / 仅译文 / 原文 / 沉浸） */
+.ety-mode-trans [data-ety-id] { display: none !important; }   /* 只留译文：隐藏原文块 */
+.ety-mode-orig .ety-t-block { display: none !important; }     /* 只看原文：隐藏译文块 */
+.ety-mode-immersive [data-ety-id] { font-size: 0.78em; color: var(--ety-muted); opacity: 0.82; } /* 原文弱化小字 */
+.ety-mode-immersive .ety-t-block { border-left-color: var(--ety-border); background: transparent; color: var(--ety-text); }
+
+/* 选中/悬停双向高亮：原文块 ↔ 译文块（用 rgba + outline，兼容所有浏览器，确保可见） */
+.ety-pair-hl {
+  background: rgba(var(--ety-color-rgb), 0.30) !important;
+  border-radius: 4px;
+  outline: 2px solid rgba(var(--ety-color-rgb), 0.85);
+  outline-offset: 1px;
+}
+.ety-pair-hov {
+  background: rgba(var(--ety-color-rgb), 0.16) !important;
+  border-radius: 4px;
+}
+
+/* ---- 悬浮工具栏 ---- */
+.ety-toolbar {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483646;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: color-mix(in srgb, var(--ety-surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--ety-border);
+  border-radius: 999px;
+  padding: 6px 8px 6px 14px;
+  box-shadow: var(--ety-shadow);
+  font: 12px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--ety-text-2);
+  user-select: none;
+}
+.ety-toolbar .ety-status { min-width: 64px; text-align: center; }
+.ety-toolbar .ety-progress { width: 88px; height: 4px; border-radius: 999px; background: var(--ety-surface-2); overflow: hidden; flex: none; transition: opacity 0.4s; }
+.ety-toolbar .ety-progress > i { display: block; height: 100%; width: 0; background: var(--ety-color); transition: width 0.25s ease; }
+.ety-toolbar .ety-progress.ety-done { opacity: 0; }
+.ety-modes {
+  display: flex;
+  background: var(--ety-surface-2);
+  border-radius: 999px;
+  padding: 2px;
+}
+.ety-modes button,
+.ety-toolbar .ety-restore {
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 5px 10px;
+  transition: all 0.12s;
+}
+.ety-modes button.ety-active {
+  background: var(--ety-surface);
+  color: var(--ety-color);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(28, 38, 80, 0.14);
+}
+.ety-toolbar .ety-restore {
+  background: var(--ety-surface-2);
+  border: 1px solid var(--ety-border);
+}
+.ety-toolbar .ety-restore:hover { color: var(--ety-danger); border-color: var(--ety-danger-bd); }
+
+/* ---- 轻提示 ---- */
+.ety-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 2147483647;
+  background: color-mix(in srgb, var(--ety-text) 92%, transparent);
+  color: #fff;
+  font: 13px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  padding: 10px 18px;
+  border-radius: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.25s;
+  max-width: 80vw;
+}
+.ety-toast.ety-show { opacity: 1; transform: translateX(-50%); }
+
+/* 词典联动查词：词组/近义词中的单词可点击重新查词 */
+.ety-wlink { color: var(--ety-color); cursor: pointer; border-bottom: 1px dotted var(--ety-color); }
+.ety-wlink:hover { background: color-mix(in srgb, var(--ety-color) 12%, transparent); }
+/* 词典页脚：有道网页链接 */
+.ety-dlink { color: var(--ety-muted); font-size: 12px; text-decoration: none; }
+.ety-dlink:hover { color: var(--ety-color); }
+/* 工具栏：存术语按钮 */
+.ety-term-btn { border: 1px solid var(--ety-border); background: var(--ety-surface); color: var(--ety-text-2); border-radius: 999px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+.ety-term-btn:hover { border-color: var(--ety-color); color: var(--ety-color); }
+/* 译文内联编辑态（双击译文） */
+.ety-t.ety-edit { outline: 1px dashed var(--ety-color); border-radius: 4px; background: color-mix(in srgb, var(--ety-color) 8%, transparent); cursor: text; }
+/* 沉浸式对照：原文弱化小字在上，译文为主体 */
+.ety-mode-immersive .ety-t-block { font-size: 0.98em; }
+/* 卡片头部可拖拽 */
+.ety-card-head { cursor: move; }

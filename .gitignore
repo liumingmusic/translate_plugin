@@ -1,0 +1,11 @@
+# WorkBuddy 内部数据（含个人偏好/记忆，不入库）
+.workbuddy/
+
+# macOS
+.DS_Store
+
+# 临时测试脚本
+_t_*.js
+
+# 打包产物
+*.zip
