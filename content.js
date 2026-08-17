@@ -827,7 +827,7 @@
       acceptNode(node) {
         const p = node.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.closest(SKIP_SELECTOR) || p.closest('.ety-toolbar,.ety-card,.ety-bubble,.ety-toast,.ety-t-block')) {
+        if (p.closest(SKIP_SELECTOR) || p.closest('.ety-toolbar,.ety-card,.ety-bubble,.ety-toast,.ety-t-block,.ety-orig')) {
           return NodeFilter.FILTER_REJECT;
         }
         const v = node.nodeValue;
@@ -868,7 +868,18 @@
     tEl.dataset.etyPair = id;
     tEl.title = it.text;
     tEl.innerHTML = '<i></i><i></i><i></i>';
-    blockEl.insertAdjacentElement('afterend', tEl);
+    // 受限父容器（tr/ul/ol 只允许特定子元素）：afterend 插入 div 兄弟是非法 HTML，
+    // 会被浏览器游离到表格/列表外。改为把原文包裹进 .ety-orig，译文放内部末尾。
+    if (blockEl.tagName === 'TD' || blockEl.tagName === 'TH' || blockEl.tagName === 'LI') {
+      blockEl.classList.add('ety-inner-pair');
+      const origWrap = document.createElement('div');
+      origWrap.className = 'ety-orig';
+      while (blockEl.firstChild) origWrap.appendChild(blockEl.firstChild);
+      blockEl.appendChild(origWrap);
+      blockEl.appendChild(tEl);
+    } else {
+      blockEl.insertAdjacentElement('afterend', tEl);
+    }
     it.t = tEl;
     pairMap[id] = { o: blockEl, t: tEl };
   }
@@ -1150,7 +1161,14 @@
     page.aborted = true;
     page.translating = false;
     document.querySelectorAll('.ety-t-block').forEach(el => el.remove());
-    document.querySelectorAll('[data-ety-id]').forEach(el => delete el.dataset.etyId);
+    // 解包裹：把 .ety-orig 内的原文节点移回原容器，再删除 .ety-orig
+    document.querySelectorAll('.ety-orig').forEach(el => {
+      const p = el.parentNode;
+      if (!p) return;
+      while (el.firstChild) p.insertBefore(el.firstChild, el);
+      p.removeChild(el);
+    });
+    document.querySelectorAll('[data-ety-id]').forEach(el => { delete el.dataset.etyId; el.classList.remove('ety-inner-pair'); });
     pairMap = {};
     pairSeq = 0;
     removePairListeners();
