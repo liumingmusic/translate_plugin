@@ -72,6 +72,16 @@
 - **修复**：仅对 `<td>/<th>/<li>` 改用「把原文包裹进 `.ety-orig` + 译文 `<div>` 放容器**内部末尾**」，`<p>/<div>/<table>` 等仍用原来的 afterend 兄弟（本就合法）；四种显示模式（对照 / 仅译文 / 仅原文 / 沉浸）的 CSS 同步区分「内部包裹」与「兄弟」两种情况，`restorePage` 增加解包裹逻辑，`collectBlocks` 跳过 `.ety-orig` 避免二次翻译重复
 - **顺带**：`.ety-t-block` 译文块背景的 `color-mix()` 也换成 `rgba()`，消除旧浏览器背景不可见的隐患（与 v1.5.3 同因）
 
+### v1.5.5 重构（全文翻译改为「逐句上下对照」）
+- **用户诉求**：此前是「整段原文 → 整段译文」两大块，找不到逐行 / 逐句对应，且译文整块下沉；用户要「一行一行对应」的翻译。经确认采用「上下逐句」：每句原文在上、其译文紧随下一行，句句严格对应。
+- **核心重构**（content.js + content.css）：翻译 / 对照单元从「块（段落）」细化到「句子」。
+  - 新增 `splitSentences`：按中英文句末标点（。！？.!?；; 及换行）切句，无标点长文整段作一句（不误拆）。
+  - 新增 `collectSentences` + `wrapSentences`：遍历可见文本节点，把每个文本节点按句拆成「原文句 `<span class="ety-os">` + 译文句 `<span class="ety-t-block">`」成对（`.ety-sent` 包裹），原地替换原文本节点；保留原文容器（`<p>/<td>/<b>` 等）不被破坏。
+  - **从根上解决游离**：译文 / 原文句全部用 `<span>`（而非 `<div>`），`<span>` 在任何父容器（含 `<td>/<li>/<b>`）内都是**合法 HTML**；CSS 用 `display:block` 让每句成对成行——既实现句句对应，又彻底规避 v1.5.4 的「div 进受限父被游离」问题（旧 `.ety-orig`/`.ety-inner-pair` 方案因此废弃）。
+  - 四种模式 CSS 回归简洁：`trans` 隐藏 `[data-ety-id]`（原文句）、`orig` 隐藏 `.ety-t-block`（译文句）、`immersive` 弱化原文句；`restorePage` 改为把 `.ety-sent` 还原为纯文本节点恢复原文；`MAX_SEGMENTS` 上限 1500→6000（句数远多于段数）。
+  - 双向高亮（`pairOf`/`highlightPair`）无需改：译文元素仍是 `.ety-t-block`、原文句带 `[data-ety-id]`，选中 / 悬停任一即可高亮对应句。
+- **验证**：jsdom 12 项测试全过——中英文切句正确、无标点不误拆、`<p>/<b>/<td>` 内 `.ety-sent`（span）序列化无异常（HTML 合法）、`restorePage` 原文恢复一致、二次翻译不重复。
+
 ### 语种配置
 - 源语言支持**自动检测**（Google/Lingva/SimplyTranslate/百度/大模型原生支持；MyMemory 用字符集启发式判定）
 - 目标语言 17 种常用语言可选：中/英/日/韩/法/西/德/俄/意/葡/阿/泰/越/印尼/荷/土等

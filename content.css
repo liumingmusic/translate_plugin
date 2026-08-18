@@ -327,17 +327,19 @@
   40% { opacity: 1; transform: translateY(-4px); }
 }
 
-/* ---- 全文翻译：原文/译文（段落级对照） ---- */
-/* 原文保持页面原样；译文作为独立块紧跟其后，左色条 + 浅底，一眼对应 */
+/* ---- 全文翻译：原文句 / 译文句（逐句上下对照） ---- */
+/* 每个句子一对：原文句在上、译文句紧随下一行，句句严格对应 */
+.ety-sent { display: block; }
+.ety-os { display: block; }                                  /* 原文句 */
 .ety-t-block {
   display: block;
-  margin: 6px 0 10px;
-  padding: 6px 10px;
+  margin: 2px 0 8px;
+  padding: 4px 10px;
   border-left: 3px solid var(--ety-color);
   background: rgba(var(--ety-color-rgb), 0.07);
   color: var(--ety-color);
   border-radius: 0 6px 6px 0;
-  line-height: 1.75;
+  line-height: 1.7;
   cursor: help;
   font-size: 0.98em;
 }
@@ -356,14 +358,9 @@
 .ety-t.ety-loading-t i:nth-child(3), .ety-t-block.ety-loading-t i:nth-child(3) { animation-delay: 0.3s; }
 
 /* 显示模式切换（对照 / 仅译文 / 原文 / 沉浸） */
-/* 仅译文：隐藏原文，保留译文 */
-.ety-mode-trans .ety-orig { display: none !important; }                              /* inner 情况（td/th/li）的原文 */
-.ety-mode-trans [data-ety-id]:not(.ety-inner-pair) { display: none !important; }     /* afterend 情况：容器即原文 */
-/* 仅原文：隐藏译文块（含 inner 情况的译文） */
-.ety-mode-orig .ety-t-block { display: none !important; }
-/* 沉浸：原文弱化小字，译文正常 */
-.ety-mode-immersive [data-ety-id]:not(.ety-inner-pair) { font-size: 0.78em; color: var(--ety-muted); opacity: 0.82; }
-.ety-mode-immersive .ety-inner-pair > .ety-orig { font-size: 0.78em; color: var(--ety-muted); opacity: 0.82; }
+.ety-mode-trans [data-ety-id] { display: none !important; }   /* 只留译文：隐藏原文句 */
+.ety-mode-orig .ety-t-block { display: none !important; }     /* 只看原文：隐藏译文句 */
+.ety-mode-immersive [data-ety-id] { font-size: 0.78em; color: var(--ety-muted); opacity: 0.82; } /* 原文弱化小字 */
 .ety-mode-immersive .ety-t-block { border-left-color: var(--ety-border); background: transparent; color: var(--ety-text); font-size: 0.98em; }
 
 /* 选中/悬停双向高亮：原文块 ↔ 译文块（用 rgba + outline，兼容所有浏览器，确保可见） */

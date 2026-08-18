@@ -9,7 +9,7 @@
 
   const IS_TOP = window === window.top;
   const MODES = ['bilingual', 'trans', 'orig', 'immersive'];
-  const MAX_SEGMENTS = 1500;
+  const MAX_SEGMENTS = 6000;
 
   const defaults = () => ({
     engine: 'google',
@@ -819,15 +819,54 @@
     return document.body;
   }
 
-  // 按块聚合文本节点：同一块内的多个文本节点合并为一段（解决逐节点换行导致的对照混乱）
-  function collectBlocks() {
+  // 句子拆分：按中英文句末标点把文本切成句子（保留标点），用于「逐句上下对照」
+  function splitSentences(text) {
+    const t = (text || '').replace(/\s+/g, ' ').trim();
+    if (!t) return [];
+    const re = /[^。！？.!?；;\n]+(?:[。！？.!?；;\n]+|$)/g;
+    const arr = t.match(re) || [];
+    return arr.map(s => s.trim()).filter(Boolean);
+  }
+
+  // 全文翻译：把文本节点按句子拆成「原文句 + 译文句」成对（均用 span，HTML 合法；
+  // CSS 让其 block 显示 → 句句上下对应，既避免整段译文整块下沉，也从根上避免 div 进受限父游离）
+  function wrapSentences(textNode, sents) {
+    const parent = textNode.parentNode;
+    if (!parent) return [];
+    const frag = document.createDocumentFragment();
     const items = [];
-    const byBlock = new Map();
+    for (const s of sents) {
+      const sent = document.createElement('span');
+      sent.className = 'ety-sent';
+      const os = document.createElement('span');
+      os.className = 'ety-os';
+      os.textContent = s;
+      const ts = document.createElement('span');
+      ts.className = 'ety-t-block ety-loading-t';
+      ts.title = s;
+      ts.innerHTML = '<i></i><i></i><i></i>';
+      sent.appendChild(os);
+      sent.appendChild(ts);
+      const id = 'ety-b' + (++pairSeq);
+      sent.dataset.etyPair = id;
+      os.dataset.etyId = id;
+      frag.appendChild(sent);
+      pairMap[id] = { o: os, t: ts };
+      items.push({ text: s, t: ts, o: os, id });
+    }
+    parent.insertBefore(frag, textNode);
+    parent.removeChild(textNode);
+    return items;
+  }
+
+  // 收集可翻译文本并按句包裹（原地用 span 替换文本节点，保留原文容器，HTML 始终合法）
+  function collectSentences() {
+    const nodes = [];
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         const p = node.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
-        if (p.closest(SKIP_SELECTOR) || p.closest('.ety-toolbar,.ety-card,.ety-bubble,.ety-toast,.ety-t-block,.ety-orig')) {
+        if (p.closest(SKIP_SELECTOR) || p.closest('.ety-toolbar,.ety-card,.ety-bubble,.ety-toast,.ety-t-block,.ety-sent')) {
           return NodeFilter.FILTER_REJECT;
         }
         const v = node.nodeValue;
@@ -841,64 +880,31 @@
         return NodeFilter.FILTER_ACCEPT;
       },
     });
-    let n, count = 0;
-    while ((n = walker.nextNode()) && count < MAX_SEGMENTS) {
-      const bk = nearestBlock(n);
-      let it = byBlock.get(bk);
-      if (!it) {
-        it = { blockEl: bk, raw: '', t: null };
-        byBlock.set(bk, it);
-        items.push(it);
-      }
-      it.raw += n.nodeValue;
-      count++;
+    let n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    const items = [];
+    for (const node of nodes) {
+      if (!node.isConnected) continue;
+      const sents = splitSentences(node.nodeValue);
+      if (!sents.length) continue;
+      items.push(...wrapSentences(node, sents));
     }
-    items.forEach(it => { it.text = (it.raw || '').replace(/\s+/g, ' ').trim(); it.raw = null; });
     return items.filter(it => it.text);
-  }
-
-  // 全文翻译：原文块保持原样（不拆分、保留加粗/链接等格式），译文作为独立块紧跟其后
-  function wrapBlock(it) {
-    const blockEl = it.blockEl;
-    if (!blockEl || !blockEl.isConnected) return;
-    const id = 'ety-b' + (++pairSeq);
-    blockEl.dataset.etyId = id;
-    const tEl = document.createElement('div');
-    tEl.className = 'ety-t-block ety-loading-t';
-    tEl.dataset.etyPair = id;
-    tEl.title = it.text;
-    tEl.innerHTML = '<i></i><i></i><i></i>';
-    // 受限父容器（tr/ul/ol 只允许特定子元素）：afterend 插入 div 兄弟是非法 HTML，
-    // 会被浏览器游离到表格/列表外。改为把原文包裹进 .ety-orig，译文放内部末尾。
-    if (blockEl.tagName === 'TD' || blockEl.tagName === 'TH' || blockEl.tagName === 'LI') {
-      blockEl.classList.add('ety-inner-pair');
-      const origWrap = document.createElement('div');
-      origWrap.className = 'ety-orig';
-      while (blockEl.firstChild) origWrap.appendChild(blockEl.firstChild);
-      blockEl.appendChild(origWrap);
-      blockEl.appendChild(tEl);
-    } else {
-      blockEl.insertAdjacentElement('afterend', tEl);
-    }
-    it.t = tEl;
-    pairMap[id] = { o: blockEl, t: tEl };
   }
 
   async function startPageTranslation() {
     if (page.translating) { toast('正在翻译中，请稍候'); return; }
     if (settings.from !== 'auto' && settings.from === settings.to) { toast('源语言与目标语言相同，无需翻译'); return; }
+    if (page.items.length) restorePage(); // 重复触发：先清理上一次
     let items;
-    try { items = collectBlocks(); } catch (e) { toast('页面结构异常：' + e.message); return; }
+    try { items = collectSentences(); } catch (e) { toast('页面结构异常：' + e.message); return; }
     if (!items.length) { toast('未找到可翻译的文本'); return; }
     page.items = items;
     page.translating = true;
     page.aborted = false;
-    pairMap = {};
-    pairSeq = 0;
     page.mode = settings.displayMode || 'bilingual';
     if (IS_TOP) buildToolbar();
     setMode(page.mode);
-    for (const it of items) wrapBlock(it);
     addPairListeners();
     await runTranslation(items);
     page.translating = false;
@@ -1160,15 +1166,12 @@
   function restorePage() {
     page.aborted = true;
     page.translating = false;
-    document.querySelectorAll('.ety-t-block').forEach(el => el.remove());
-    // 解包裹：把 .ety-orig 内的原文节点移回原容器，再删除 .ety-orig
-    document.querySelectorAll('.ety-orig').forEach(el => {
-      const p = el.parentNode;
-      if (!p) return;
-      while (el.firstChild) p.insertBefore(el.firstChild, el);
-      p.removeChild(el);
+    // 把「原文句 + 译文句」成对 (.ety-sent) 还原为纯文本节点，恢复原文
+    document.querySelectorAll('.ety-sent').forEach(s => {
+      const os = s.querySelector('.ety-os');
+      const txt = os ? os.textContent : '';
+      s.parentNode.replaceChild(document.createTextNode(txt), s);
     });
-    document.querySelectorAll('[data-ety-id]').forEach(el => { delete el.dataset.etyId; el.classList.remove('ety-inner-pair'); });
     pairMap = {};
     pairSeq = 0;
     removePairListeners();
