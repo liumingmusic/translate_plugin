@@ -59,6 +59,7 @@ async function init() {
 
   $('#selectionBubble').checked = !!st.selectionBubble;
   $('#instantTranslate').checked = !!st.instantTranslate;
+  $('#translateScope').checked = st.translateScope !== 'all';
   $('#transColor').value = st.transColor || '#3b5bdb';
   $('#dictEnabled').checked = st.dict !== false;
 
@@ -435,6 +436,7 @@ function collect() {
     displayMode: (document.querySelector('.seg button.on') || {}).dataset.v || 'bilingual',
     selectionBubble: $('#selectionBubble').checked,
     instantTranslate: $('#instantTranslate').checked,
+    translateScope: $('#translateScope').checked ? 'auto' : 'all',
     transColor: $('#transColor').value,
     trColor: $('#trColorInherit').checked ? '' : $('#trColor').value,
     trScale: Number($('#trScale').value) || 1,

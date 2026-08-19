@@ -18,6 +18,7 @@
     from: 'auto',
     to: 'zh-CN',
     displayMode: 'bilingual',
+    translateScope: 'auto',  // 全文翻译范围：auto=仅正文(跳过导航/侧栏/脚注)  all=整页
     selectionBubble: true,
     instantTranslate: false, // 选中即自动翻译（默认关：避免每次划词都翻，烦）
     transColor: '#3b5bdb',
@@ -800,6 +801,21 @@
   let pairListenersOn = false;
 
   const SKIP_SELECTOR = 'script,style,noscript,template,textarea,select,code,pre,xmp,svg,math,iframe,object,canvas,[contenteditable]';
+  // 站点噪声：维基脚注/导航盒/分类/编辑链接、GitHub 标题锚点等，正文区域内也应跳过
+  const JUNK_SELECTOR = '.reference,.reflist,.navbox,.catlinks,.mw-editsection,.toc,.metadata,.noprint,.mw-empty-elt,.references,.anchor,.mw-cite-backlink,.mw-parser-output .thumb';
+
+  // 正文根检测：优先定位站点正文容器，避免把整页(导航/侧栏/页脚)都翻了
+  // 维基百科 Vector: #bodyContent(含标题+正文, 排除左侧栏与页脚) / #mw-content-text
+  // GitHub: .markdown-body(README/文档) / .comment-body(Issue/PR 评论)
+  // 通用兜底: main / article / [role=main] / body
+  function contentRoot() {
+    const S = ['#bodyContent', '#mw-content-text', '.markdown-body', '.comment-body', 'main', 'article', '[role=main]'];
+    for (const s of S) {
+      const el = document.querySelector(s);
+      if (el && el !== document.body) return el;
+    }
+    return document.body;
+  }
 
   // 块级判断：最近的“块级祖先”作为一段译文的单位，保证原文一段→译文一段的对照
   const BLOCK_TAGS = new Set(['P', 'DIV', 'LI', 'BLOCKQUOTE', 'PRE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
@@ -827,13 +843,17 @@
   function collectBlocks() {
     const items = [];
     const byBlock = new Map();
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    // 仅翻译正文区域（auto 模式）：维基/GitHub 等站点跳过导航/侧栏/页脚，显著减少垃圾翻译
+    const scoped = settings.translateScope !== 'all';
+    const root = scoped ? contentRoot() : document.body;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         const p = node.parentElement;
         if (!p) return NodeFilter.FILTER_REJECT;
         if (p.closest(SKIP_SELECTOR) || p.closest('.ety-toolbar,.ety-card,.ety-bubble,.ety-toast,.ety-t-block,.ety-orig')) {
           return NodeFilter.FILTER_REJECT;
         }
+        if (scoped && p.closest(JUNK_SELECTOR)) return NodeFilter.FILTER_REJECT; // 站点噪声
         const v = node.nodeValue;
         if (!v || !v.trim()) return NodeFilter.FILTER_REJECT;
         if (!/[\p{L}\p{N}]/u.test(v)) return NodeFilter.FILTER_REJECT;

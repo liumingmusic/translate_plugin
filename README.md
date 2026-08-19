@@ -95,6 +95,13 @@
   - 译文字号：相对原文的倍数滑块（0.8–1.6×，默认 1.0×）。
   - 对照框开关：可关闭对照模式的边框与底色，译文仅用颜色区分。
   - 以上设置通过 CSS 变量（`--ety-t-color` / `--ety-t-scale` / `ety-no-box`）注入，修改后实时作用于正在显示的译文，无需重新翻译。
+
+### v1.5.8 修复（维基百科 / GitHub 等站点全文翻译垃圾过多）
+- **根因**：`collectBlocks` 之前对**整个 `document.body`** 做全文翻译。维基百科 / GitHub 这类页面，真正可读的正文只是页面一小块，其余是左侧栏、顶栏、页脚、右侧栏、脚注、导航盒——它们全被翻成双语，挤乱布局、视觉嘈杂。
+- **正文区域自动定位 `contentRoot()`**：按优先级命中站点正文容器，只翻正文——维基百科 `#bodyContent` / `#mw-content-text`、GitHub `.markdown-body` / `.comment-body`、通用兜底 `main` / `article` / `[role=main]`，最后才退回整页。
+- **站点噪声跳过 `JUNK_SELECTOR`**：正文区域内仍跳过维基脚注 `.reference`、引用列表 `.references`、导航盒 `.navbox`、分类 `.catlinks`、编辑链接 `.mw-editsection`、目录 `.toc` 等；GitHub 标题锚点 `.anchor`。
+- **实测（jsdom 模拟典型页）**：维基百科垃圾段从 61%→0%、GitHub 从 36%→0%；正文段落 / 信息框 / 标题全部保留。
+- **新增开关（options「翻译与显示」）**：`全文翻译仅翻正文` 默认开启；取消勾选则翻译整页（兼容需要翻全站的特殊场景）。
 - **验证**：jsdom 6 项算法测试全过（字号/行高/字族/字重/边距复制正确、隐藏原文仍可读取字号、清空生效、空色值→inherit）；5 个 JS 文件 `node --check` 通过。
 
 ### 语种配置

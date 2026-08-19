@@ -39,6 +39,7 @@ export const DEFAULT_SETTINGS = {
   from: 'auto',
   to: 'zh-CN',
   displayMode: 'bilingual',
+  translateScope: 'auto',  // 全文翻译范围：auto=仅正文(跳过导航/侧栏/脚注)  all=整页
   selectionBubble: true,
   instantTranslate: false,       // 选中即自动翻译（默认关：避免每次划词都翻，烦）
   transColor: '#1a73e8',
