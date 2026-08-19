@@ -42,6 +42,9 @@ export const DEFAULT_SETTINGS = {
   selectionBubble: true,
   instantTranslate: false,       // 选中即自动翻译（默认关：避免每次划词都翻，烦）
   transColor: '#1a73e8',
+  trColor: '',            // 译文文字颜色：空 = 跟随原文
+  trScale: 1,             // 译文字号（相对原文的倍数）
+  trBox: true,            // 对照模式是否显示边框与底色
   engines: ['google'],          // 多选：参与对比的翻译器（含大模型配置 id，如 llm0）
   fullPageEngine: 'google',     // 全文翻译固定使用的单一翻译器
   dict: true,

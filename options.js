@@ -62,6 +62,21 @@ async function init() {
   $('#transColor').value = st.transColor || '#3b5bdb';
   $('#dictEnabled').checked = st.dict !== false;
 
+  // 全文译文显示设置
+  $('#trColorInherit').checked = !st.trColor;
+  $('#trColor').value = st.trColor || '#1a73e8';
+  $('#trColor').disabled = !st.trColor;
+  $('#trScale').value = st.trScale || 1;
+  $('#trScaleVal').textContent = (Number(st.trScale) || 1).toFixed(2) + '×';
+  $('#trBox').checked = st.trBox !== false;
+  $('#trColorInherit').addEventListener('change', e => {
+    $('#trColor').disabled = e.target.checked;
+    $('#trColorHint').textContent = e.target.checked ? '跟随原文' : '自定义';
+  });
+  $('#trScale').addEventListener('input', e => {
+    $('#trScaleVal').textContent = (Number(e.target.value) || 1).toFixed(2) + '×';
+  });
+
   // 新设置
   $('#vocabAuto').checked = !!st.vocabAuto;
   $('#glossaryEnabled').checked = !!st.glossaryEnabled;
@@ -421,6 +436,9 @@ function collect() {
     selectionBubble: $('#selectionBubble').checked,
     instantTranslate: $('#instantTranslate').checked,
     transColor: $('#transColor').value,
+    trColor: $('#trColorInherit').checked ? '' : $('#trColor').value,
+    trScale: Number($('#trScale').value) || 1,
+    trBox: $('#trBox').checked,
     dict: $('#dictEnabled').checked,
     vocabAuto: $('#vocabAuto').checked,
     glossaryEnabled: $('#glossaryEnabled').checked,

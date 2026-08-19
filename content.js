@@ -21,6 +21,9 @@
     selectionBubble: true,
     instantTranslate: false, // 选中即自动翻译（默认关：避免每次划词都翻，烦）
     transColor: '#3b5bdb',
+    trColor: '',            // 译文文字颜色：空 = 跟随原文（仅译文模式与原布局一致）
+    trScale: 1,             // 译文字号（相对原文的倍数）
+    trBox: true,            // 对照模式是否显示边框与底色（关则仅用颜色区分）
     dict: true,
     vocabAuto: false,
     glossaryEnabled: false,
@@ -71,6 +74,7 @@
     const gl = await chrome.storage.local.get('ety_glossary').catch(() => ({}));
     glossary = Array.isArray(gl.ety_glossary) ? gl.ety_glossary : [];
     document.documentElement.style.setProperty('--ety-color', settings.transColor || '#1a73e8');
+    applyDisplayVars();
     if (page.items.length && settings.displayMode !== prevMode) setMode(settings.displayMode);
     try { const cp = await chrome.storage.local.get('ety_card_pos'); if (cp.ety_card_pos) cardPos = cp.ety_card_pos; } catch (e) {}
   }
@@ -899,6 +903,7 @@
     if (IS_TOP) buildToolbar();
     setMode(page.mode);
     for (const it of items) wrapBlock(it);
+    applyDisplayVars();
     addPairListeners();
     await runTranslation(items);
     page.translating = false;
@@ -1010,6 +1015,50 @@
     MODES.forEach(x => cl.remove('ety-mode-' + x));
     cl.add('ety-mode-' + m);
     page.modeBtns.forEach(b => b.classList.toggle('ety-active', b.dataset.m === m));
+    applyDisplayVars();
+  }
+
+  // 显示设置（译文颜色/字号/对照框）注入 CSS 变量；仅译文模式复制原文块字体度量以对齐布局
+  function applyDisplayVars() {
+    const root = document.documentElement;
+    root.style.setProperty('--ety-t-color', settings.trColor || 'inherit');
+    root.style.setProperty('--ety-t-scale', String(settings.trScale || 1));
+    root.classList.toggle('ety-no-box', settings.trBox === false);
+    try {
+      if (page && page.items && page.items.length) {
+        if (page.mode === 'trans') syncTransTypo();
+        else clearTransTypo();
+      }
+    } catch (e) { /* 首屏 loadSettings 早于 page/pairMap 初始化，安全跳过 */ }
+  }
+  function syncTransTypo() {
+    const scale = parseFloat(settings.trScale) || 1;
+    for (const id in pairMap) {
+      const p = pairMap[id];
+      if (!p || !p.o || !p.t || !p.o.isConnected || !p.t.isConnected) continue;
+      let cs;
+      try { cs = getComputedStyle(p.o); } catch (e) { continue; }
+      const fs = parseFloat(cs.fontSize);
+      if (!isNaN(fs)) p.t.style.fontSize = (fs * scale) + 'px';
+      p.t.style.lineHeight = cs.lineHeight;
+      p.t.style.fontFamily = cs.fontFamily;
+      p.t.style.fontWeight = cs.fontWeight;
+      p.t.style.letterSpacing = cs.letterSpacing;
+      p.t.style.marginTop = cs.marginTop;
+      p.t.style.marginBottom = cs.marginBottom;
+      p.t.style.marginLeft = '0px';
+      p.t.style.marginRight = '0px';
+      p.t.style.paddingLeft = '0px';
+      p.t.style.paddingRight = '0px';
+    }
+  }
+  function clearTransTypo() {
+    const props = ['fontSize', 'lineHeight', 'fontFamily', 'fontWeight', 'letterSpacing',
+      'marginTop', 'marginBottom', 'marginLeft', 'marginRight', 'paddingLeft', 'paddingRight'];
+    for (const id in pairMap) {
+      const p = pairMap[id];
+      if (p && p.t && p.t.isConnected) props.forEach(k => { p.t.style[k] = ''; });
+    }
   }
 
   function buildToolbar() {

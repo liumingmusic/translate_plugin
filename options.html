@@ -99,7 +99,19 @@
       </div>
       <div class="field checkbox"><input type="checkbox" id="selectionBubble"><label for="selectionBubble">选中文本后显示“译”气泡按钮</label></div>
       <div class="field checkbox"><input type="checkbox" id="instantTranslate"><label for="instantTranslate">选中即自动翻译（关掉则只显示气泡，点一下再翻译）</label></div>
-      <div class="field"><label>译文颜色</label><input type="color" id="transColor"></div>
+      <div class="field"><label>主题强调色（边框 / 高亮 / 提示）</label><input type="color" id="transColor"></div>
+      <hr class="sep">
+      <div class="sub">全文译文样式</div>
+      <div class="field checkbox"><input type="checkbox" id="trColorInherit" checked><label for="trColorInherit">译文文字颜色跟随原文（取消勾选可自定义）</label></div>
+      <div class="field">
+        <label>译文文字颜色</label>
+        <div class="row"><input type="color" id="trColor"><span class="hint" id="trColorHint">跟随原文</span></div>
+      </div>
+      <div class="field">
+        <label>译文字号（相对原文的倍数）</label>
+        <div class="row"><input type="range" id="trScale" min="0.8" max="1.6" step="0.05" value="1"><span class="val" id="trScaleVal">1.00×</span></div>
+      </div>
+      <div class="field checkbox"><input type="checkbox" id="trBox" checked><label for="trBox">对照模式下显示边框与底色（取消则译文仅用颜色区分）</label></div>
       <h2>发音</h2>
       <div class="field">
         <label>默认口音</label>

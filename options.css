@@ -204,3 +204,10 @@ code { background: var(--ety-surface-2); padding: 1px 6px; border-radius: 5px; f
 
 footer { margin-top: 18px; display: flex; align-items: center; gap: 12px; }
 #saveStatus { color: var(--ety-color); font-size: 13px; }
+
+/* 全文译文样式设置 */
+.sub { font-size: 13px; font-weight: 600; color: var(--ety-color); margin: 2px 0; }
+.sep { border: none; border-top: 1px dashed var(--ety-border); margin: 16px 0 10px; }
+.val { font-size: 12.5px; color: var(--ety-text-2); min-width: 44px; }
+.row { display: flex; align-items: center; gap: 10px; }
+#trColor:disabled { opacity: 0.45; cursor: not-allowed; }
