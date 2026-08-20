@@ -341,6 +341,11 @@
   line-height: 1.6;
   cursor: help;
   font-size: calc(1em * var(--ety-t-scale, 1));
+  /* 覆盖宿主网页可能继承的 word-break: break-all 等，避免标点在任意处硬断行；
+     line-break: strict 强制 CJK 禁则：句号/逗号等不出现在行首 */
+  word-break: normal;
+  line-break: strict;
+  overflow-wrap: break-word;
 }
 /* 对照框可关：仅用颜色区分译文，去掉边框与底色 */
 .ety-no-box .ety-t-block {
